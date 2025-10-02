@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Amib.Threading.Internal
 {
@@ -45,7 +46,11 @@ namespace Amib.Threading.Internal
             {
                 lock (_lock)
                 {
-                    return _dictionary[key];
+                    if (_dictionary.TryGetValue(key, out TValue value))
+                    {
+                        return value;
+                    }
+                    return default;
                 }
             }
             set
@@ -57,24 +62,24 @@ namespace Amib.Threading.Internal
             }
         }
 
-        public Dictionary<TKey, TValue>.KeyCollection Keys
+        public List<TKey> Keys
         {
             get
             {
                 lock (_lock)
                 {
-                    return _dictionary.Keys;
+                    return _dictionary.Keys.ToList();
                 }
             }
         }
 
-        public Dictionary<TKey, TValue>.ValueCollection Values
+        public List<TValue> Values
         {
             get
             {
                 lock (_lock)
                 {
-                    return _dictionary.Values;
+                    return _dictionary.Values.ToList();
                 }
             }
         }
