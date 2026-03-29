@@ -582,11 +582,14 @@ namespace Amib.Threading.Internal
 
         public void Dispose()
         {
-            if (!_isDisposed)
+            lock (this)
             {
-                Cleanup();
+                if (!_isDisposed)
+                {
+                    Cleanup();
+                    _isDisposed = true;
+                }
             }
-            _isDisposed = true;
         }
 
         private void ValidateNotDisposed()

@@ -115,11 +115,14 @@ namespace Amib.Threading.Internal
             {
                 Debug.Assert(value > 0);
 
-                int diff = value - _concurrency;
-                _concurrency = value;
-                if (diff > 0)
+                lock (_lock)
                 {
-                    EnqueueToSTPNextNWorkItem(diff);
+                    int diff = value - _concurrency;
+                    _concurrency = value;
+                    if (diff > 0)
+                    {
+                        EnqueueToSTPNextNWorkItem(diff);
+                    }
                 }
             }
         }
@@ -165,14 +168,17 @@ namespace Amib.Threading.Internal
 	    /// </summary>
 	    public override void Start()
 	    {
-	        // If the Work Items Group already started then quit
-	        if (!_isSuspended)
+	        lock (_lock)
 	        {
-	            return;
+	            // If the Work Items Group already started then quit
+	            if (!_isSuspended)
+	            {
+	                return;
+	            }
+	            _isSuspended = false;
+
+	            EnqueueToSTPNextNWorkItem(Math.Min(_workItemsQueue.Count, _concurrency));
 	        }
-	        _isSuspended = false;
-            
-	        EnqueueToSTPNextNWorkItem(Math.Min(_workItemsQueue.Count, _concurrency));
 	    }
 
 	    public override void Cancel(bool abortExecution)
@@ -219,12 +225,15 @@ namespace Amib.Threading.Internal
 
 	    public void OnSTPIsStarting()
 		{
-            if (_isSuspended)
+            lock (_lock)
             {
-                return;
+                if (_isSuspended)
+                {
+                    return;
+                }
+
+                EnqueueToSTPNextNWorkItem(_concurrency);
             }
-			
-            EnqueueToSTPNextNWorkItem(_concurrency);
 		}
 
 	    public void EnqueueToSTPNextNWorkItem(int count)

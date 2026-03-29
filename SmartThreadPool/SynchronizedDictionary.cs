@@ -16,7 +16,13 @@ namespace Amib.Threading.Internal
 
         public int Count
         {
-            get { return _dictionary.Count; }
+            get
+            {
+                lock (_lock)
+                {
+                    return _dictionary.Count;
+                }
+            }
         }
 
         public bool Contains(TKey key)

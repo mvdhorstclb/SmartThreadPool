@@ -902,7 +902,7 @@ namespace Amib.Threading
             ValidateWorkItemsGroupWaitForIdleImpl(workItemsGroup, workItem);
 			if ((null != workItemsGroup) &&
                 (null != workItem) &&
-                CurrentThreadEntry.CurrentWorkItem.WasQueuedBy(workItemsGroup))
+                workItem.WasQueuedBy(workItemsGroup))
 			{
 				throw new NotSupportedException("WaitForIdle cannot be called from a thread on its SmartThreadPool, it causes a deadlock");
 			}
@@ -1474,6 +1474,11 @@ namespace Amib.Threading
         {
             get
             {
+                if (CurrentThreadEntry == null || CurrentThreadEntry.CurrentWorkItem == null)
+                {
+                    throw new InvalidOperationException(
+                        "IsWorkItemCanceled can only be called from a work item executing in the SmartThreadPool");
+                }
                 return CurrentThreadEntry.CurrentWorkItem.IsCanceled;
             }
         } 
